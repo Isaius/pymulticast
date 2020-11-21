@@ -67,3 +67,10 @@ while True:
         
         online.sort()
         print("Selected is {}".format(online[0]))
+        print(msg)
+        print("{} == {}".format(receiver_id, online[0]))
+
+        if(receiver_id == str(online[0])):
+            print("its me")
+            result = str(eval(msg))
+            sock.sendto(result.encode(), address)
