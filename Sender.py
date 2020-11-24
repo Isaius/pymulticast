@@ -4,14 +4,11 @@ import sys
 from time import sleep
 
 # Multicast e criação do socket
-multicast_group = ('224.2.2.3', 10000)
+multicast_group = ('224.2.2.3', 10001)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ttl = struct.pack('b', 1)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
-
-# Set a timeout so the socket does not block
-# indefinitely when trying to receive data.
-#sock.settimeout(4)
+sock.settimeout(10)
 
 while True:
     expression = input("Digite a expressão desejada (ou 'e' para encerrar): ")
@@ -19,7 +16,7 @@ while True:
     if expression == 'e':
         break
 
-    message = bytes(expression, 'utf-8')
+    message = expression.encode()
 
     try:
         # Enviando a mensagem
