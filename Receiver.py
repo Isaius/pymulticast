@@ -66,6 +66,7 @@ while True:
             sleep(1)
         
         online.sort()
+        print(online)
         print("Selected is {}".format(online[0]))
         print(msg)
         print("{} == {}".format(receiver_id, online[0]))
