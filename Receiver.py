@@ -41,12 +41,35 @@ hb_count = 0
 # ID do servidor
 receiver_id = 0
 
+# IP do servidor
+hostname = socket.gethostname()
+ip = socket.gethostbyname(hostname)
+
+# Vetor de servidores vivos
+alive = []
+last_alive = []
+
+# Vetor de servidores caídos
+down = []
+
 # Thread para limpar o vetor de servidores disponíveis
 def clear_online():
+    global online, alive, last_alive
+    
     while True:
         sleep(CLEAR_ONLINE_INTERVAL)
-        global online
         online = []
+        
+        # Limpando servidores ativos
+        diff = list(set(last_alive) - set(alive))
+        if ((receiver_id != 0 and all(x in alive for x in diff)) or hb_count < 2):
+            print("We're good")
+        else:
+            down = diff
+            print("We're down", down)
+        print("Alive are", alive)
+        last_alive = alive
+        alive = []
 
 # Thread para emitir heartbeats
 def heartbeat_emmiter(thread_name, base_sleep):
@@ -62,10 +85,10 @@ def heartbeat_emmiter(thread_name, base_sleep):
                 print("I must be the number 1")
                 receiver_id = 1
                 continue
+            # Caso contrário definir ID como o primeiro disponível
             print("Mates are:", online)
             online.sort()
             receiver_id = len(online)+1
-            # Caso contrário definir ID como o primeiro disponível
             for i in range(len(online)):
                 print(i, ":", online[i])
                 if int(online[i]) != i+1:
@@ -76,18 +99,26 @@ def heartbeat_emmiter(thread_name, base_sleep):
         seed(time())
         # Acréscimo aleatório de 0 a 1 no intervalo de heartbeat
         sleep(base_sleep + random())
+
         print('{}: Receiver {} sending heartbeat'.format(thread_name, receiver_id))
-        heartbeat = 'HEY:' + str(receiver_id)
+        heartbeat = 'HEY:' + str(receiver_id) + ':' + ip + ':' +str(down)
 
         # Checando por travamentos no programa
+        if down.__contains__(ip):
+            receiver_id = 0
+            down.remove(ip)
+            continue
+        '''
         print("Heartbeat!", hb_count)
         if hb_count > 0:
             diff = time() % 60 - last_hb
             print("Diff:", diff)
+        '''
 
-        sock2.sendto(heartbeat.encode(), multicast_group_tuple)
-        last_hb = time() % 60
-        hb_count += 1
+        if receiver_id != 0:
+            sock2.sendto(heartbeat.encode(), multicast_group_tuple)
+            last_hb = time() % 60
+            hb_count += 1
 
 # Thread para escutar heartbeats
 def heartbeat_listener():
@@ -95,6 +126,7 @@ def heartbeat_listener():
         data, address = sock2.recvfrom(1024)
 
         msg = data.decode()
+        print(msg)
 
         if(msg.find("HEY") >= 0):
             data = msg.split(":")
@@ -102,6 +134,13 @@ def heartbeat_listener():
 
             if(heartbeat_id not in online):
                 online.append(heartbeat_id)
+
+            server_ip = data[2]
+            if (server_ip not in alive):
+                alive.append(server_ip)
+
+            down = data[3]
+            print("Wanted are", type(down))
 
             print(online)
 
