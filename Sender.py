@@ -1,6 +1,7 @@
 import socket
 import struct
 import sys
+import re
 from time import sleep
 
 # Multicast e criação do socket
@@ -15,6 +16,12 @@ while True:
 
     if expression == 'e':
         break
+    
+    if re.search('[a-zA-Z]', expression):
+        print("Expressão fornecida é inválida!")
+        continue
+
+    print(eval(expression))
 
     message = expression.encode()
 
