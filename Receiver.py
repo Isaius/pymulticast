@@ -158,17 +158,16 @@ while True:
     msg = data.decode()
     print(msg)
 
-    while True:
-        online.sort()
-        print(online)
+    online.sort()
+    print(online)
 
-        # se a lista online estiver vazia espera os heartbeats
-        if(len(online) > 0 and str(receiver_id) == str(online[0])):
-            result = str(eval(msg))
-            print("I am the sheriff now and I say: {}".format(result))
-            
-            sock.sendto(result.encode(), address)
-            break
-        else:
-            sleep(WAIT_FOR_CLEAR)
-            continue
+    # se a lista online estiver vazia espera os heartbeats
+    if len(online) <= 0:
+        sleep(WAIT_FOR_CLEAR)
+
+    if(len(online) > 0 and str(receiver_id) == str(online[0])):
+        result = str(eval(msg))
+        print("I am the sheriff now and I say: {}".format(result))
+        
+        sock.sendto(result.encode(), address)
+ 
