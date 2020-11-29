@@ -1,6 +1,5 @@
 import socket
 import struct
-import sys
 from time import sleep, time
 from random import seed, random
 import _thread
@@ -52,7 +51,7 @@ last_alive = []
 # Vetor de servidores caídos
 down = []
 
-# Thread para limpar o vetor de servidores disponíveis
+# Função da thread para limpar o vetor de servidores disponíveis
 def clear_online():
     global online, alive, last_alive, down
     
@@ -93,7 +92,6 @@ def heartbeat_emmiter(thread_name, base_sleep):
             online.sort()
             receiver_id = len(online)+1
             for i in range(len(online)):
-                print(i, ":", online[i])
                 if int(online[i]) != i+1:
                     receiver_id = i+1
                     break
@@ -105,13 +103,6 @@ def heartbeat_emmiter(thread_name, base_sleep):
         
         print('{}: Receiver {} sending heartbeat'.format(thread_name, receiver_id))
         heartbeat = heartbeat_message()
-
-        '''
-        print("Heartbeat!", hb_count)
-        if hb_count > 0:
-            diff = time() % 60 - last_hb
-            print("Diff:", diff)
-        '''
 
         if receiver_id != 0:
             # Checando por travamentos no programa
@@ -165,19 +156,19 @@ while True:
     data, address = sock.recvfrom(1024)
 
     msg = data.decode()
+    print(msg)
 
-    if(msg.find("HEY") < 0):
-        print(msg)
-        if(len(online) == 0):
-            sleep(WAIT_FOR_CLEAR)
-        
+    while True:
         online.sort()
         print(online)
-        print("Selected is {}".format(online[0]))
-        print(msg)
-        print("{} == {}".format(receiver_id, online[0]))
 
-        if(str(receiver_id) == str(online[0])):
-            print("its me")
+        # se a lista online estiver vazia espera os heartbeats
+        if(len(online) > 0 and str(receiver_id) == str(online[0])):
             result = str(eval(msg))
+            print("I am the sheriff now and I say: {}".format(result))
+            
             sock.sendto(result.encode(), address)
+            break
+        else:
+            sleep(WAIT_FOR_CLEAR)
+            continue
