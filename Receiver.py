@@ -49,11 +49,11 @@ alive = []
 last_alive = []
 
 # Vetor de servidores caídos
-down = []
+wanted = []
 
 # Função da thread para limpar o vetor de servidores disponíveis
 def clear_online():
-    global online, alive, last_alive, down
+    global online, alive, last_alive, wanted
     
     while True:
         sleep(CLEAR_ONLINE_INTERVAL)
@@ -64,18 +64,18 @@ def clear_online():
         if ((receiver_id != 0 and all(x in alive for x in diff)) or hb_count < 2):
             print("We're good")
         else:
-            down += diff
-            print("We're down", down)
+            wanted += diff
+            print("We're wanted", wanted)
         print("Alive are", alive)
         last_alive = alive
         alive = []
 
 def heartbeat_message():
-    return "HEY:{}:{}:{}".format(receiver_id, ip, down)
+    return "HEY:{}:{}:{}".format(receiver_id, ip, wanted)
 
 # Thread para emitir heartbeats
 def heartbeat_emmiter(thread_name, base_sleep):
-    global receiver_id, last_hb, hb_count
+    global receiver_id, last_hb, hb_count, wanted
 
     while True:
         # Definindo ID de servidor
@@ -106,9 +106,9 @@ def heartbeat_emmiter(thread_name, base_sleep):
 
         if receiver_id != 0:
             # Checando por travamentos no programa
-            if down.__contains__(ip):
+            if wanted.__contains__(ip):
                 receiver_id = 0
-                down.remove(ip)
+                wanted.remove(ip)
                 sock2.sendto(heartbeat_message().encode(), multicast_group_tuple)
                 continue
 
@@ -118,7 +118,7 @@ def heartbeat_emmiter(thread_name, base_sleep):
 
 # Thread para escutar heartbeats
 def heartbeat_listener():
-    global down
+    global wanted
 
     while True:
         data, address = sock2.recvfrom(1024)
@@ -136,13 +136,13 @@ def heartbeat_listener():
             server_ip = data[2]
             if (server_ip not in alive):
                 alive.append(server_ip)
-
+    
             rec_down = data[3][2:-2].split("', '")
 
-            if set(down) != set(rec_down):
-                down = rec_down
-
-            print("Wanted are", down)
+            if set(wanted) != set(rec_down):
+                wanted = rec_down
+    
+            print("Wanted are", wanted)
 
             print(online)
 
