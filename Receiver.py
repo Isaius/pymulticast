@@ -62,11 +62,11 @@ def clear_online():
         # Limpando servidores ativos
         diff = list(set(last_alive) - set(alive))
         if ((receiver_id != 0 and all(x in alive for x in diff)) or hb_count < 2):
-            print("We're good")
+            print(receiver_id, ": We're good")
         else:
             wanted += diff
-            print("We're wanted", wanted)
-        print("Alive are", alive)
+            print(receiver_id, ": We're wanted", wanted)
+        print(receiver_id, ": Alive are", alive)
         last_alive = alive
         alive = []
 
@@ -80,22 +80,22 @@ def heartbeat_emmiter(thread_name, base_sleep):
     while True:
         # Definindo ID de servidor
         if receiver_id == 0:
-            print("I was just born, waiting for mates")
+            print(receiver_id, ": I was just born, waiting for mates")
             sleep(HEARTBEAT_MAX_INTERVAL)
             # Caso seja único servidor no grupo
             if len(online) == 0:
-                print("I must be the number 1")
+                print(receiver_id, ": I must be the number 1")
                 receiver_id = 1
                 continue
             # Caso contrário definir ID como o primeiro disponível
-            print("Mates are:", online)
+            print(receiver_id, ": Mates are:", online)
             online.sort()
             receiver_id = len(online)+1
             for i in range(len(online)):
                 if int(online[i]) != i+1:
                     receiver_id = i+1
                     break
-            print("So I am ", receiver_id)
+            print(receiver_id, ": So I am ", receiver_id)
 
         seed(time())
         # Acréscimo aleatório de 0 a 1 no intervalo de heartbeat
@@ -108,6 +108,7 @@ def heartbeat_emmiter(thread_name, base_sleep):
             # Checando por travamentos no programa
             if wanted.__contains__(ip):
                 receiver_id = 0
+                hb_count = 0
                 wanted.remove(ip)
                 sock2.sendto(heartbeat_message().encode(), multicast_group_tuple)
                 continue
@@ -142,7 +143,7 @@ def heartbeat_listener():
             if set(wanted) != set(rec_down):
                 wanted = rec_down
     
-            print("Wanted are", wanted)
+            print(receiver_id, ": Wanted are", wanted)
 
             print(online)
 
@@ -167,7 +168,8 @@ while True:
 
     if(len(online) > 0 and str(receiver_id) == str(online[0])):
         result = str(eval(msg))
-        print("I am the sheriff now and I say: {}".format(result))
+        rsp = '{}:{}'.format(receiver_id, result)
+        print(receiver_id, ": I am the sheriff now and I say: {}".format(result))
         
-        sock.sendto(result.encode(), address)
+        sock.sendto(rsp.encode(), address)
  

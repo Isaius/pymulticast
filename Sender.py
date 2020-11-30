@@ -47,7 +47,8 @@ while True:
                     print('Timeout, não houve resposta do servidor... :(')
                     break
             else:
-                print('Recebido {} do servidor {}'.format(data.decode(), server))
+                rsp = data.decode().split(':')
+                print('Resposta do servidor {}: {}'.format(rsp[0], rsp[1]))
                 break
     finally:
         pass
