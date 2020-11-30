@@ -156,19 +156,19 @@ _thread.start_new_thread(heartbeat_listener, ())
 while True:
     data, address = sock.recvfrom(1024)
 
-    msg = data.decode()
-    print(msg)
-
-    online.sort()
-    print(online)
+    msg = data.decode().split(':')
+    print(msg[1])
 
     # se a lista online estiver vazia espera os heartbeats
     if len(online) <= 0:
         sleep(WAIT_FOR_CLEAR)
 
+    online.sort()
+    print(online)
+
     if(len(online) > 0 and str(receiver_id) == str(online[0])):
-        result = str(eval(msg))
-        rsp = '{}:{}'.format(receiver_id, result)
+        result = str(eval(msg[1]))
+        rsp = '{}:{}:{}'.format(receiver_id, result, msg[0])
         print(receiver_id, ": I am the sheriff now and I say: {}".format(result))
         
         sock.sendto(rsp.encode(), address)

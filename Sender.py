@@ -16,6 +16,8 @@ ttl = struct.pack('b', 1)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 sock.settimeout(3)
 
+message_id = 0
+
 while True:
     expression = input("Digite a expressão desejada (ou 'e' para encerrar): ")
 
@@ -26,7 +28,7 @@ while True:
         print("Expressão fornecida é inválida!")
         continue
 
-    message = expression.encode()
+    message = '{}:{}'.format(message_id, expression).encode()
 
     try:
         # Enviando a mensagem
@@ -48,9 +50,13 @@ while True:
                     break
             else:
                 rsp = data.decode().split(':')
+                # Checando identificador da mensagem esperada
+                if str(rsp[2]) != str(message_id):
+                    continue
                 print('Resposta do servidor {}: {}'.format(rsp[0], rsp[1]))
                 break
     finally:
+        message_id += 1
         pass
 
 # Fechando o socket
