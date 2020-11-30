@@ -71,7 +71,7 @@ def clear_online():
         alive = []
 
 def heartbeat_message():
-    return "HEY:{}:{}:{}".format(receiver_id, ip, wanted)
+    return "HEY:{}:{}".format(receiver_id, wanted)
 
 # Thread para emitir heartbeats
 def heartbeat_emmiter(thread_name, base_sleep):
@@ -134,18 +134,17 @@ def heartbeat_listener():
             if(heartbeat_id != 0 and heartbeat_id not in online):
                 online.append(heartbeat_id)
 
-            server_ip = data[2]
-            if (server_ip not in alive):
-                alive.append(server_ip)
+            if (address[0] not in alive):
+                alive.append(address[0])
     
-            rec_down = data[3][2:-2].split("', '")
+            rec_down = data[2][2:-2].split("', '")
 
             if set(wanted) != set(rec_down):
                 wanted = rec_down
     
             print(receiver_id, ": Wanted are", wanted)
 
-            print(online)
+            print("online:", online)
 
 
 _thread.start_new_thread(clear_online, ())
